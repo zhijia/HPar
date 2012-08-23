@@ -102,9 +102,9 @@ public class ParallelParser {
 
 		Node rightMost = getRightMost(body0);
 		Node[] children = body.childNodesAsArray();
-		
+
 		Node current = rightMost;
-		
+
 		System.out.println("children.length: " + children.length);
 		for (int i = 0; i < children.length; i++) {
 			// move to next start tag
@@ -124,7 +124,7 @@ public class ParallelParser {
 
 			// if match
 			if (current.nodeName().equals(children[i].nodeName())
-					&& ((Element) children[i]).onlyEndTag == true) {
+			        && ((Element) children[i]).onlyEndTag == true) {
 				((Element) current).onlyStartTag = false;
 				continue;
 			}
@@ -139,9 +139,9 @@ public class ParallelParser {
 		Node rightMost = root;
 		do {
 			rightMost = rightMost.childNodesAsArray()[rightMost
-					.childNodesAsArray().length - 1];
+			        .childNodesAsArray().length - 1];
 		} while (rightMost.childNodesAsArray().length != 0);
-		
+
 		return rightMost;
 	}
 }
