@@ -13,69 +13,72 @@ import java.io.*;
 import java.util.*;
 
 /**
- * HTML to plain-text. This example program demonstrates the use of jsoup to convert HTML input to lightly-formatted
- * plain-text. That is divergent from the general goal of jsoup's .text() methods, which is to get clean data from a
- * scrape.
+ * HTML to plain-text. This example program demonstrates the use of jsoup to
+ * convert HTML input to lightly-formatted plain-text. That is divergent from
+ * the general goal of jsoup's .text() methods, which is to get clean data from
+ * a scrape.
  * <p/>
- * Note that this is a fairly simplistic formatter -- for real world use you'll want to embrace and extend.
- *
+ * Note that this is a fairly simplistic formatter -- for real world use you'll
+ * want to embrace and extend.
+ * 
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class HtmlToPlainText {
-	
-	
+
     public static void main(String... args) throws IOException {
         Validate.isTrue(args.length == 1, "usage: supply url to fetch");
         String inputFile = args[0];
-//		HtmlToPlainText formmatter = new HtmlToPlainText();
+        // HtmlToPlainText formmatter = new HtmlToPlainText();
 
-		String line = "";
-		try {
-			Scanner scanner = new Scanner(new FileInputStream(inputFile));
-			scanner.useDelimiter("//Z");
-			line = scanner.next();
-			System.out.println("finished input html loading.");
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+        String line = "";
+        try {
+            Scanner scanner = new Scanner(new FileInputStream(inputFile));
+            scanner.useDelimiter("//Z");
+            line = scanner.next();
+            System.out.println("finished input html loading.");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
-		Document doc = null;
-		long sum = 0;
-		int loop = 0;
-		while (loop++ < 1) {
-			
-			long start = System.nanoTime();
-			
-			// line: input, 1: number of threads
-			ParallelParser pparser = new ParallelParser(line, 1); 
-			doc = pparser.parse();
-			
-			if (loop > 10) {
-				sum += System.nanoTime() - start;
-				System.out.println("ave: " + (sum / (loop - 10)));
-			}
-			System.gc();
-		}
-    	
-//        FileWriter file = new FileWriter("doc.html");
-//        PrintWriter out = new PrintWriter(file);
-//        out.println(doc);
-//        out.close();
-        
-//        String plainText = formmatter.getPlainText(doc);
-//        System.out.println("--------\n"+plainText+"\n--------");
+        Document doc = null;
+        long sum = 0;
+        int loop = 0;
+        while (loop++ < 1) {
+
+            long start = System.nanoTime();
+
+            // line: input, 1: number of threads
+            ParallelParser pparser = new ParallelParser(line, 1);
+            doc = pparser.parse();
+
+            if (loop > 10) {
+                sum += System.nanoTime() - start;
+                System.out.println("ave: " + (sum / (loop - 10)));
+            }
+            System.gc();
+        }
+
+        // FileWriter file = new FileWriter("doc.html");
+        // PrintWriter out = new PrintWriter(file);
+        // out.println(doc);
+        // out.close();
+
+        // String plainText = formmatter.getPlainText(doc);
+        // System.out.println("--------\n"+plainText+"\n--------");
     }
-    
-    
+
     /**
      * Format an Element to plain-text
-     * @param element the root element to format
+     * 
+     * @param element
+     *            the root element to format
      * @return formatted text
      */
     public String getPlainText(Element element) {
         FormattingVisitor formatter = new FormattingVisitor();
         NodeTraversor traversor = new NodeTraversor(formatter);
-        traversor.traverse(element); // walk the DOM, and call .head() and .tail() for each node
+        traversor.traverse(element); // walk the DOM, and call .head() and
+                                     // .tail() for each node
 
         return formatter.toString();
     }
@@ -84,13 +87,16 @@ public class HtmlToPlainText {
     private class FormattingVisitor implements NodeVisitor {
         private static final int maxWidth = 80;
         private int width = 0;
-        private StringBuilder accum = new StringBuilder(); // holds the accumulated text
+        private StringBuilder accum = new StringBuilder(); // holds the
+                                                           // accumulated text
 
         // hit when the node is first seen
         public void head(Node node, int depth) {
             String name = node.nodeName();
             if (node instanceof TextNode)
-                append(((TextNode) node).text()); // TextNodes carry all user-readable text in the DOM.
+                append(((TextNode) node).text()); // TextNodes carry all
+                                                  // user-readable text in the
+                                                  // DOM.
             else if (name.equals("li"))
                 append("\n * ");
         }
@@ -109,9 +115,11 @@ public class HtmlToPlainText {
         // appends text to the string builder with a simple word wrap method
         private void append(String text) {
             if (text.startsWith("\n"))
-                width = 0; // reset counter if starts with a newline. only from formats above, not in natural text
-            if (text.equals(" ") &&
-                    (accum.length() == 0 || StringUtil.in(accum.substring(accum.length() - 1), " ", "\n")))
+                width = 0; // reset counter if starts with a newline. only from
+                           // formats above, not in natural text
+            if (text.equals(" ")
+                    && (accum.length() == 0 || StringUtil.in(
+                            accum.substring(accum.length() - 1), " ", "\n")))
                 return; // don't accumulate long runs of empty spaces
 
             if (text.length() + width > maxWidth) { // won't fit, needs to wrap
@@ -121,7 +129,8 @@ public class HtmlToPlainText {
                     boolean last = i == words.length - 1;
                     if (!last) // insert a space if not the last word
                         word = word + " ";
-                    if (word.length() + width > maxWidth) { // wrap and reset counter
+                    if (word.length() + width > maxWidth) { // wrap and reset
+                                                            // counter
                         accum.append("\n").append(word);
                         width = word.length();
                     } else {
