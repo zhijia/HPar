@@ -27,10 +27,10 @@ public class HtmlToPlainText {
     public static void main(String... args) throws IOException {
         Validate.isTrue(args.length == 1, "usage: supply url to fetch");
         String inputFile = args[0];
-        HtmlToPlainText formmatter = new HtmlToPlainText();
-        
-        String line = "";
-    	try {
+//		HtmlToPlainText formmatter = new HtmlToPlainText();
+
+		String line = "";
+		try {
 			Scanner scanner = new Scanner(new FileInputStream(inputFile));
 			scanner.useDelimiter("//Z");
 			line = scanner.next();
@@ -38,27 +38,29 @@ public class HtmlToPlainText {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+
+		Document doc = null;
+		long sum = 0;
+		int loop = 0;
+		while (loop++ < 1) {
+			
+			long start = System.nanoTime();
+			
+			// line: input, 1: number of threads
+			ParallelParser pparser = new ParallelParser(line, 1); 
+			doc = pparser.parse();
+			
+			if (loop > 10) {
+				sum += System.nanoTime() - start;
+				System.out.println("ave: " + (sum / (loop - 10)));
+			}
+			System.gc();
+		}
     	
-    	 Document doc = null;
-    	long sum = 0;
-    	int loop = 0;
-    	while(loop++ < 1)
-    	{
-	    	long start = System.nanoTime();
-	        ParallelParser pparser = new ParallelParser(line, 1);	// line: input html, 2: numThreads
-	        doc = pparser.parse();
-	        if(loop > 10)
-	        {
-	        	sum += System.nanoTime() - start;
-	        	System.out.println("ave: "+(sum / (loop - 10)));
-	        }
-	        System.gc();
-    	}
-    	
-        FileWriter file = new FileWriter("doc.html");
-        PrintWriter out = new PrintWriter(file);
-        out.println(doc);
-        out.close();
+//        FileWriter file = new FileWriter("doc.html");
+//        PrintWriter out = new PrintWriter(file);
+//        out.println(doc);
+//        out.close();
         
 //        String plainText = formmatter.getPlainText(doc);
 //        System.out.println("--------\n"+plainText+"\n--------");
