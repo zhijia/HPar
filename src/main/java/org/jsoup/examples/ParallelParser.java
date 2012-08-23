@@ -4,14 +4,13 @@ import org.jsoup.Jsoup;
 import org.jsoup.helper.DescendableLinkedList;
 import org.jsoup.nodes.*;
 
-
 public class ParallelParser {
 
 	int numThreads;
 	String input;
 	Document[] docs;
 	String[] inputs;
-	DescendableLinkedList<Element> stack;	// open emlement stack
+	DescendableLinkedList<Element> stack; // open emlement stack
 
 	ParallelParser(String input, int numThreads) {
 		this.input = input;
@@ -21,12 +20,12 @@ public class ParallelParser {
 	}
 
 	Document parse() {
-		
+
 		Thread[] pparsers = new ParserThread[numThreads];
-		
+
 		long sta = System.currentTimeMillis();
 		for (int i = 0; i < numThreads; i++) {
-			pparsers[i] = new ParserThread(i+"", inputs[i]);
+			pparsers[i] = new ParserThread(i + "", inputs[i]);
 			pparsers[i].start();
 		}
 
@@ -40,10 +39,10 @@ public class ParallelParser {
 		long mid = System.currentTimeMillis();
 		Document doc = postprocess(docs);
 		long end = System.currentTimeMillis();
-		
-		System.out.println("parsing time:        "+(mid - sta));
-		System.out.println("postprocessing time: "+(end - mid));
-		
+
+		System.out.println("parsing time:        " + (mid - sta));
+		System.out.println("postprocessing time: " + (end - mid));
+
 		return doc;
 	}
 
@@ -88,65 +87,61 @@ public class ParallelParser {
 	}
 
 	Document postprocess(Document[] docs) {
-		for(int i = 1; i < numThreads; i++)
-		{
-			System.out.println("merge docs["+i+"]");
+		for (int i = 1; i < numThreads; i++) {
+			System.out.println("merge docs[" + i + "]");
 			docs[0] = merge(docs[0], docs[i]);
 		}
 		return docs[0];
 	}
-	
+
 	// merge doc's body'children to doc0's body
 	Document merge(Document doc0, Document doc) {
-		
+
 		Element body0 = doc0.body();
 		Element body = doc.body();
-		
+
 		Node rightMost = getRightMost(body0);
-		
 		Node[] children = body.childNodesAsArray();
 		
 		Node current = rightMost;
-		System.out.println("children.length: "+ children.length);
-		for(int i = 0; i < children.length; i++)
-		{
+		
+		System.out.println("children.length: " + children.length);
+		for (int i = 0; i < children.length; i++) {
 			// move to next start tag
-			while(true)
-			{				
-				if(current.nodeType().equals("Element") == false) {
+			while (true) {
+				if (current.nodeType().equals("Element") == false) {
 					current = current.parent();
 					continue;
 				}
-				
-				if(((Element)current) == doc0.body())
+
+				if (((Element) current) == doc0.body())
 					break;
-				
-				if(((Element)current).onlyStartTag == true)
+
+				if (((Element) current).onlyStartTag == true)
 					break;
 				current = current.parent();
 			}
-			
+
 			// if match
-			if(current.nodeName().equals(children[i].nodeName())
-				&& ((Element)children[i]).onlyEndTag == true)
-			{
-				((Element)current).onlyStartTag = false;
+			if (current.nodeName().equals(children[i].nodeName())
+					&& ((Element) children[i]).onlyEndTag == true) {
+				((Element) current).onlyStartTag = false;
 				continue;
 			}
-			
-			((Element)current).appendChild(children[i]);
-			System.out.println("current.nodeName(): "+current.nodeName()+"children[i].nodeName()"+children[i].nodeName());
+
+			((Element) current).appendChild(children[i]);
 		}
-		
+
 		return doc0;
 	}
-	
+
 	Node getRightMost(Node root) {
 		Node rightMost = root;
-    	do {
-    		rightMost = rightMost.childNodesAsArray()[rightMost.childNodesAsArray().length - 1];
-    	} while(rightMost.childNodesAsArray().length != 0);
-
+		do {
+			rightMost = rightMost.childNodesAsArray()[rightMost
+					.childNodesAsArray().length - 1];
+		} while (rightMost.childNodesAsArray().length != 0);
+		
 		return rightMost;
 	}
 }
