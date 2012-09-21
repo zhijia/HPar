@@ -33,16 +33,16 @@ class HtmlTreeBuilder extends TreeBuilder {
     	init();
     }
     
-    // zhijia add to build the tag-insertionMode mapping to predict insertion mode 
-    // when <table> tag is broken
+    // zhijia add to build the tag-insertionMode mapping to predict insertion
+    // mode when <table> tag is broken
     void init() {
-    	stateMap.put("td", HtmlTreeBuilderState.InCell);
-    	stateMap.put("tr", HtmlTreeBuilderState.InTableText);
-    	stateMap.put("th", HtmlTreeBuilderState.InCell);
-    	stateMap.put("thead", HtmlTreeBuilderState.InTableText);
-    	stateMap.put("tbody", HtmlTreeBuilderState.InTableText);
-    	stateMap.put("tfoot", HtmlTreeBuilderState.InTableText);
-    	//stateMap.put("table", HtmlTreeBuilderState.InTableText);
+        stateMap.put("td", HtmlTreeBuilderState.InCell);
+        stateMap.put("tr", HtmlTreeBuilderState.InTableText);
+        stateMap.put("th", HtmlTreeBuilderState.InCell);
+        stateMap.put("thead", HtmlTreeBuilderState.InTableText);
+        stateMap.put("tbody", HtmlTreeBuilderState.InTableText);
+        stateMap.put("tfoot", HtmlTreeBuilderState.InTableText);
+        // stateMap.put("table", HtmlTreeBuilderState.InTableText);
     }
 
     @Override
@@ -105,13 +105,13 @@ class HtmlTreeBuilder extends TreeBuilder {
     
     // zhijia add to reset the parser when <table> tag is broken
     void reset(String name) {
-    	super.reset();
-    	this.state = stateMap.get(name);
+        super.reset();
+        this.state = stateMap.get(name);
     }
-    
+
     // zhijia add to reset the parser caused by broken script tag
     void emptyFormattingElements() {
-    	 this.formattingElements = new DescendableLinkedList<Element>();
+        this.formattingElements = new DescendableLinkedList<Element>();
     }
     
     void transition(HtmlTreeBuilderState state) {
@@ -182,19 +182,18 @@ class HtmlTreeBuilder extends TreeBuilder {
     }
 
     // zhijia add to insert endTag tokens which are normally ignored
-    Element insert(Token.EndTag endTag)
-    {
-    	Element body = doc.body();
-    	
-    	Attributes attr = new Attributes();
-    	Element el = new Element(Tag.valueOf(endTag.name()), baseUri, attr);
-    	el.onlyEndTag = true;
-    	
-    	body.appendChild(el);
-    		
-    	return el;
+    Element insert(Token.EndTag endTag) {
+        Element body = doc.body();
+
+        Attributes attr = new Attributes();
+        Element el = new Element(Tag.valueOf(endTag.name()), baseUri, attr);
+        el.onlyEndTag = true;
+
+        body.appendChild(el);
+
+        return el;
     }
-    
+
     Element insert(String startTagName) {
         Element el = new Element(Tag.valueOf(startTagName), baseUri);
         insert(el);
@@ -228,19 +227,19 @@ class HtmlTreeBuilder extends TreeBuilder {
         StartComment startComment = new StartComment(startCommentToken.getData(), baseUri);
         insertNode(startComment);
     }
-    
+
     // zhijia add to insert endComment tokens
     void insert(Token.EndComment endCommentToken) {
         EndComment endComment = new EndComment(endCommentToken.getData(), baseUri);
-        
+
         // make html have two body nodes: bodyCopy and body
         // bodyCopy for normal interpreting, body for endComment interpreting
         Element body = doc.body();
         Element bodyCopy = new Element(body.tag(), body.baseUri(), body.attributes());
         bodyCopy.setVersionIndex(body.getVersionIndex() + 1);
         Node[] bodyChildren = body.childNodesAsArray();
-        for(int i = 0; i < bodyChildren.length; i++) {
-        	bodyCopy.appendChild(bodyChildren[i]);
+        for (int i = 0; i < bodyChildren.length; i++) {
+            bodyCopy.appendChild(bodyChildren[i]);
         }
         bodyCopy.setParent(body.parent());
         body.parent().addChildren(bodyCopy);

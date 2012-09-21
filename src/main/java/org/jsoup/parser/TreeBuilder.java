@@ -76,62 +76,58 @@ abstract class TreeBuilder {
     }
     
     // update doc tree according to open stack emlement
-    void updateDoc()
-    {   
-    	Node root = (Node)doc;
-    	Stack<Node> shadow = new Stack<Node>();
+    void updateDoc() {
+        Node root = (Node) doc;
+        Stack<Node> shadow = new Stack<Node>();
 
-    	// get html Element
-    	Node rightMost = null;
-    	for(int i=0; i<root.childNodesAsArray().length; i++) {
-    		if(root.childNode(i).nodeName().endsWith("html")) {
-    			rightMost = root.childNode(i);
-    			break;
-    		}
-    	}
-    	
-    	shadow.push(rightMost);
-    	// get body Element, considering body1 
-    	while(rightMost.childNodesAsArray().length > 0){
-    		rightMost = rightMost.childNodesAsArray()[rightMost.childNodesAsArray().length - 1];
-    		shadow.push(rightMost);
-    	} 
-    	shadow.push(rightMost);
+        // get html Element
+        Node rightMost = null;
+        for (int i = 0; i < root.childNodesAsArray().length; i++) {
+            if (root.childNode(i).nodeName().endsWith("html")) {
+                rightMost = root.childNode(i);
+                break;
+            }
+        }
 
-    	// pop out the elements those are supposed to be complete
-    	while(shadow.size() > stack.size())
-    		shadow.pop();
+        shadow.push(rightMost);
+        // get body Element, considering body1
+        while (rightMost.childNodesAsArray().length > 0) {
+            rightMost = rightMost.childNodesAsArray()[rightMost.childNodesAsArray().length - 1];
+            shadow.push(rightMost);
+        }
+        shadow.push(rightMost);
 
-    	while(shadow.size() > 0)
-    	{
-        	Node current = shadow.pop();
-        	//System.out.println("stack.peekLast().nodeName(): "+stack.peekLast().nodeName());
-        	//System.out.println("current.nodeName()         : "+current.nodeName());
-    		if(stack.peekLast().nodeName().equals("body") ||
-    		   stack.peekLast().nodeName().equals("head") ||
-    		   current.nodeName().equals("body") ||
-    		   current.nodeName().equals("head") )
-    			break; 		
+        // pop out the elements those are supposed to be complete
+        while (shadow.size() > stack.size())
+            shadow.pop();
 
-    		if(current.nodeName().equals(stack.peekLast().nodeName()))
-    		{
-    			stack.pollLast();
-    			((Element)current).onlyStartTag = true;
-    		}
-    		else {
-    	    	System.out.println(Thread.currentThread().getName()+" err: stack doesn't match with shadow stack");
-    		}
-    	}
-    	
-//        FileWriter file = null;
-//		try {
-//			file = new FileWriter(Thread.currentThread().getName()+"doc.html");
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//        PrintWriter out = new PrintWriter(file);
-//        out.println(doc);
-//        out.close();
+        while (shadow.size() > 0) {
+            Node current = shadow.pop();
+            // System.out.println("stack.peekLast().nodeName(): "+stack.peekLast().nodeName());
+            // System.out.println("current.nodeName()         : "+current.nodeName());
+            if (stack.peekLast().nodeName().equals("body")
+                    || stack.peekLast().nodeName().equals("head")
+                    || current.nodeName().equals("body") || current.nodeName().equals("head"))
+                break;
+
+            if (current.nodeName().equals(stack.peekLast().nodeName())) {
+                stack.pollLast();
+                ((Element) current).onlyStartTag = true;
+            } else {
+                System.out.println(Thread.currentThread().getName()
+                        + " err: stack doesn't match with shadow stack");
+            }
+        }
+
+        // FileWriter file = null;
+        // try {
+        // file = new FileWriter(Thread.currentThread().getName()+"doc.html");
+        // } catch (IOException e) {
+        // e.printStackTrace();
+        // }
+        // PrintWriter out = new PrintWriter(file);
+        // out.println(doc);
+        // out.close();
     }
 
     protected abstract boolean process(Token token);
