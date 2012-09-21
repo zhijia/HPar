@@ -115,7 +115,7 @@ enum HtmlTreeBuilderState {
                         if (name.equals("base") && el.hasAttr("href"))
                             tb.maybeSetBaseUri(el);
                     } else if (name.equals("meta")) {
-                        Element meta = tb.insertEmpty(start);
+                        tb.insertEmpty(start);
                         // todo: charset switches
                     } else if (name.equals("title")) {
                         handleRcData(start, tb);
@@ -576,11 +576,12 @@ enum HtmlTreeBuilderState {
                             "nav", "ol", "pre", "section", "summary", "ul")) {
                         // todo: refactor these lookups
                         if (!tb.inScope(name)) {                       	
-                        	// zhijia insert node </endTag>
-                        	tb.insert(endTag);                      
+                        	// zhijia add to handle broken ul tag and etc.
+                        	tb.insert(endTag);
+                        	return true;
                             // nothing to close
-                        	tb.error(this);
-                            return false;
+                        	//tb.error(this);
+                            //return false;
                         } else {
                             tb.generateImpliedEndTags();
                             if (!tb.currentElement().nodeName().equals(name))
@@ -591,8 +592,11 @@ enum HtmlTreeBuilderState {
                         Element currentForm = tb.getFormElement();
                         tb.setFormElement(null);
                         if (currentForm == null || !tb.inScope(name)) {
-                            tb.error(this);
-                            return false;
+                        	// zhijia add to handle broken form tags
+                        	tb.insert(endTag);
+                        	return true;
+                            //tb.error(this);
+                            //return false;
                         } else {
                             tb.generateImpliedEndTags();
                             if (!tb.currentElement().nodeName().equals(name))
@@ -602,9 +606,13 @@ enum HtmlTreeBuilderState {
                         }
                     } else if (name.equals("p")) {
                         if (!tb.inButtonScope(name)) {
-                            tb.error(this);
-                            tb.process(new Token.StartTag(name)); // if no p to close, creates an empty <p></p>
-                            return tb.process(endTag);
+                            // zhijia add to handle broken p tag
+                            tb.insert(endTag);
+                            return true;
+                            //tb.error(this);
+                            //return false;
+                            //tb.process(new Token.StartTag(name)); // if no p to close, creates an empty <p></p>
+                            //return tb.process(endTag);
                         } else {
                             tb.generateImpliedEndTags(name);
                             if (!tb.currentElement().nodeName().equals(name))
@@ -613,10 +621,11 @@ enum HtmlTreeBuilderState {
                         }
                     } else if (name.equals("li")) {
                         if (!tb.inListItemScope(name)) {
-                        	// zhijia insert node </endTag>
+                        	// zhijia add to handle broken li tag
                         	tb.insert(endTag);
-                            tb.error(this);
-                            return false;
+                        	return true;
+                            //tb.error(this);
+                            //return false;
                         } else {
                             tb.generateImpliedEndTags(name);
                             if (!tb.currentElement().nodeName().equals(name))
@@ -625,8 +634,11 @@ enum HtmlTreeBuilderState {
                         }
                     } else if (StringUtil.in(name, "dd", "dt")) {
                         if (!tb.inScope(name)) {
-                            tb.error(this);
-                            return false;
+                        	// zhijia add to handle broken dt, dd tags
+                        	tb.insert(endTag);
+                        	return true;
+                            //tb.error(this);
+                            //return false;
                         } else {
                             tb.generateImpliedEndTags(name);
                             if (!tb.currentElement().nodeName().equals(name))
@@ -635,8 +647,11 @@ enum HtmlTreeBuilderState {
                         }
                     } else if (StringUtil.in(name, "h1", "h2", "h3", "h4", "h5", "h6")) {
                         if (!tb.inScope(new String[]{"h1", "h2", "h3", "h4", "h5", "h6"})) {
-                            tb.error(this);
-                            return false;
+                        	// zhijia add to hanle broken h tags
+                        	tb.insert(endTag);
+                        	return true;
+                            //tb.error(this);
+                            //return false;
                         } else {
                             tb.generateImpliedEndTags(name);
                             if (!tb.currentElement().nodeName().equals(name))
@@ -649,12 +664,15 @@ enum HtmlTreeBuilderState {
                     } else if (StringUtil.in(name,
                             "a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u")) {
                         // Adoption Agency Algorithm.
-                        OUTER:
+                        // OUTER:
                         for (int i = 0; i < 8; i++) {
                             Element formatEl = tb.getActiveFormattingElement(name);
-                            if (formatEl == null)
-                                return anyOtherEndTag(t, tb);
-                            else if (!tb.onStack(formatEl)) {
+                            if (formatEl == null) {
+                            	// zhijia add to handle broken <a> tag
+                            	tb.insert(endTag);
+                            	return true;
+                                //return anyOtherEndTag(t, tb);
+                            } else if (!tb.onStack(formatEl)) {
                                 tb.error(this);
                                 tb.removeFromActiveFormattingElements(formatEl);
                                 return true;
@@ -751,6 +769,31 @@ enum HtmlTreeBuilderState {
                         tb.error(this);
                         tb.process(new Token.StartTag("br"));
                         return false;
+                        
+                    // zhijia add to handle broken <table> tag, to reprocess the segment with appropriate insertion mode
+                    } else if (StringUtil.in(name, "tr", "td", "th", "thead", "tbody", "tfoot")){
+                    	tb.reset(name);
+                    	return false;
+                    	
+                    // zhijia add to handle broken <script> tag
+                    } else if (name.equals("script")) {
+                    	// attach all the children under body tag to script tag
+                    	Element body = tb.doc.body();
+                    	// attach the </script> tag to body
+                    	Attributes attr = new Attributes();
+                    	Element el = new Element(Tag.valueOf(endTag.name()), tb.baseUri, attr);
+                    	el.onlyEndTag = true;
+                    	String str = tb.reader.subString(6, tb.reader.pos()-9);
+                        TextNode tn= new TextNode(str, tb.baseUri);
+                    	
+                        body.removeChildNodes();
+                    	tb.popStackToBefore("body");
+                    	tb.emptyFormattingElements();
+                        
+                    	body.appendChild(tn);
+                    	body.appendChild(el);
+
+                    	return true;
                     } else {
                         return anyOtherEndTag(t, tb);
                     }
@@ -759,9 +802,20 @@ enum HtmlTreeBuilderState {
                 case EOF:
                     // todo: error if stack contains something not dd, dt, li, p, tbody, td, tfoot, th, thead, tr, body, html
                     // stop parsing
-                	// zhijia add to return the open element stack
                 	// System.out.println("open element stack size: "+tb.stack.size());
                     break;
+                    
+                // zhijia add to handle broken comments
+				case EndComment :
+					Token.EndComment endComment = (Token.EndComment)t;
+					tb.insert(endComment);
+					break;
+					
+				case StartComment :
+					Token.StartComment startComment = (Token.StartComment)t;
+					tb.insert(startComment);
+					break;
+					
             }
             return true;
         }
@@ -780,6 +834,11 @@ enum HtmlTreeBuilderState {
                     break;
                 } else {
                     if (tb.isSpecial(node)) {
+                    	// zhijia add to handle broken <span> tag, or user-defined tags
+                    	if(StringUtil.in(name, "span", "sub", "sup")) {
+                        	tb.insert(t.asEndTag());
+                        	return true;
+                    	}
                         tb.error(this);
                         return false;
                     }
@@ -794,9 +853,10 @@ enum HtmlTreeBuilderState {
             if (t.isCharacter()) {
                 tb.insert(t.asCharacter());
             } else if (t.isEOF()) {
-                tb.error(this);
+            	// zhijia add to handle broken <script> tags
+                //tb.error(this);
                 // if current node is script: already started
-                tb.pop();
+                //tb.pop();
                 tb.transition(tb.originalState());
                 return tb.process(t);
             } else if (t.isEndTag()) {
@@ -872,8 +932,10 @@ enum HtmlTreeBuilderState {
 
                 if (name.equals("table")) {
                     if (!tb.inTableScope(name)) {
-                        tb.error(this);
-                        return false;
+                    	// zhijia add to handle broken table tag
+                        //tb.error(this);
+                        //return false;
+                    	tb.insert(endTag);
                     } else {
                         tb.popStackToClose("table");
                     }
@@ -1055,9 +1117,13 @@ enum HtmlTreeBuilderState {
                     Token.EndTag endTag = t.asEndTag();
                     name = endTag.name();
                     if (StringUtil.in(name, "tbody", "tfoot", "thead")) {
+                    	// zhijia add to hanle broken tboy, tfoot, thead tag
                         if (!tb.inTableScope(name)) {
-                            tb.error(this);
-                            return false;
+                            //tb.error(this);
+                            //return false;
+                        	tb.insert(endTag);
+                        	tb.transition(InTable);
+                        	return true;
                         } else {
                             tb.clearStackToTableBodyContext();
                             tb.pop();
@@ -1079,9 +1145,12 @@ enum HtmlTreeBuilderState {
 
         private boolean exitTableBody(Token t, HtmlTreeBuilder tb) {
             if (!(tb.inTableScope("tbody") || tb.inTableScope("thead") || tb.inScope("tfoot"))) {
-                // frag case
-                tb.error(this);
-                return false;
+                // zhijia add to handle broken table tag
+            	// frag case
+                //tb.error(this);
+                //return false;
+            	tb.insert(t.asEndTag());
+            	return true;
             }
             tb.clearStackToTableBodyContext();
             tb.process(new Token.EndTag(tb.currentElement().nodeName())); // tbody, tfoot, thead
@@ -1114,8 +1183,12 @@ enum HtmlTreeBuilderState {
 
                 if (name.equals("tr")) {
                     if (!tb.inTableScope(name)) {
-                        tb.error(this); // frag
-                        return false;
+                  	  	// zhijia add to hanle broken tr tag
+                        //tb.error(this); // frag
+                        //return false;
+                    	tb.insert(endTag);
+                    	tb.transition(InTableBody);
+                    	return true;
                     }
                     tb.clearStackToTableRowContext();
                     tb.pop(); // tr
@@ -1161,9 +1234,13 @@ enum HtmlTreeBuilderState {
 
                 if (StringUtil.in(name, "td", "th")) {
                     if (!tb.inTableScope(name)) {
-                        tb.error(this);
-                        tb.transition(InRow); // might not be in scope if empty: <td /> and processing fake end tag
-                        return false;
+                    	// zhijia add to hanle broken td, th tags
+                        //tb.error(this);
+                        //tb.transition(InRow); // might not be in scope if empty: <td /> and processing fake end tag
+                        //return false;
+                    	tb.insert(endTag);
+                    	tb.transition(InRow);
+                        return true;
                     }
                     tb.generateImpliedEndTags();
                     if (!tb.currentElement().nodeName().equals(name))

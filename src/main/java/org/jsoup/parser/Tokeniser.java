@@ -3,9 +3,6 @@ package org.jsoup.parser;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Entities;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Readers the input stream into tokens.
  */
@@ -24,6 +21,8 @@ class Tokeniser {
     Token.Tag tagPending; // tag we are building up
     Token.Doctype doctypePending; // doctype building up
     Token.Comment commentPending; // comment building up
+    Token.StartComment startCommentPending;	// zhijia added
+    Token.EndComment endCommentPending;  // zhijia added
     private Token.StartTag lastStartTag; // the last start tag emitted, to test appropriate end tag
     private boolean selfClosingFlagAcknowledged = true;
 
@@ -52,6 +51,22 @@ class Tokeniser {
         }
     }
 
+//    // zhijia add to reset the tokenizer
+//    void reset() {
+//    	reader.setPos(0);
+//    	clearCharBuffer();
+//    	this.state = TokeniserState.Data;
+//    	this.selfClosingFlagAcknowledged = false;
+//    	this.lastStartTag = null;
+//    }
+//    
+//    // zhijia clear charBuffer
+//    void clearCharBuffer()
+//    {
+//    	charBuffer.delete(0, charBuffer.length());
+//    	isEmitPending = false;
+//    }
+    
     void emit(Token token) {
         Validate.isFalse(isEmitPending, "There is an unread token pending!");
 
@@ -174,11 +189,31 @@ class Tokeniser {
     void createCommentPending() {
         commentPending = new Token.Comment();
     }
+    
+    // zhijia added
+    void createStartCommentPending() {
+    	startCommentPending = new Token.StartComment();
+    }
 
+    // zhijia added
+    void createEndCommentPending() {
+    	endCommentPending = new Token.EndComment();
+    }
+    
     void emitCommentPending() {
         emit(commentPending);
     }
 
+    // zhijia added
+    void emitStartCommentPending() {
+    	emit(startCommentPending);
+    }
+    
+    // zhijia added
+    void emitEndCommentPending() {
+    	emit(endCommentPending);
+    }
+    
     void createDoctypePending() {
         doctypePending = new Token.Doctype();
     }

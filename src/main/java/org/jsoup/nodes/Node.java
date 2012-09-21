@@ -22,6 +22,9 @@ public abstract class Node implements Cloneable {
     Attributes attributes;
     String baseUri;
     int siblingIndex;
+    
+    // zhijia added, default = 0
+    int versionIndex;
 
     /**
      Create a new Node.
@@ -35,6 +38,7 @@ public abstract class Node implements Cloneable {
         childNodes = new ArrayList<Node>(4);
         this.baseUri = baseUri.trim();
         this.attributes = attributes;
+        this.versionIndex = 0;
     }
 
     protected Node(String baseUri) {
@@ -235,6 +239,21 @@ public abstract class Node implements Cloneable {
      */
     public Node parent() {
         return parentNode;
+    }
+    
+    // zhijia added
+    public void setParent(Node parent) {
+    	this.parentNode = parent;
+    }
+    
+    // zhijia added
+    public int getVersionIndex() {
+    	return this.versionIndex;
+    }
+    
+    // zhijia added
+    public void setVersionIndex(int versionIndex) {
+    	this.versionIndex = versionIndex;
     }
     
     /**

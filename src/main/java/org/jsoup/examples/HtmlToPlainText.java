@@ -41,27 +41,26 @@ public class HtmlToPlainText {
         }
 
         Document doc = null;
+        int cnt = 0;
         long sum = 0;
-        int loop = 0;
-        while (loop++ < 1) {
-
-            long start = System.nanoTime();
-
-            // line: input, 1: number of threads
-            ParallelParser pparser = new ParallelParser(line, 1);
-            doc = pparser.parse();
-
-            if (loop > 10) {
-                sum += System.nanoTime() - start;
-                System.out.println("ave: " + (sum / (loop - 10)));
-            }
-            System.gc();
+        while(cnt++ < 500) {
+	        long start = System.nanoTime();
+	        // parameters: line, number of threads
+	        ParallelParser pparser = new ParallelParser(line, 4);
+	        doc = pparser.parse();	        
+	        long end = System.nanoTime();
+        	if(cnt > 100) {
+        		sum += end - start;
+        	}
+	        System.out.println("time: "+ (end - start) + " ms");
+	        System.gc();
         }
+        System.out.println("ave: "+ (sum / 400) + " ms");
 
-        // FileWriter file = new FileWriter("doc.html");
-        // PrintWriter out = new PrintWriter(file);
-        // out.println(doc);
-        // out.close();
+		FileWriter file = new FileWriter("doc.html");
+		PrintWriter out = new PrintWriter(file);
+		out.println(doc);
+		out.close();
 
         // String plainText = formmatter.getPlainText(doc);
         // System.out.println("--------\n"+plainText+"\n--------");

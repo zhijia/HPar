@@ -4,6 +4,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.helper.DescendableLinkedList;
 import org.jsoup.nodes.*;
 
+import java.util.*;
+
 public class ParallelParser {
 
     int numThreads;
@@ -16,6 +18,7 @@ public class ParallelParser {
         this.input = input;
         this.numThreads = numThreads;
         inputs = partition(input);
+        //inputs = partitionByLine(input);
         docs = new Document[numThreads];
     }
 
@@ -40,7 +43,7 @@ public class ParallelParser {
         Document doc = postprocess(docs);
         long end = System.currentTimeMillis();
 
-        System.out.println("parsing time:        " + (mid - sta));
+        System.out.println("thread parsing time: " + (mid - sta));
         System.out.println("postprocessing time: " + (end - mid));
 
         return doc;
@@ -65,10 +68,28 @@ public class ParallelParser {
                 end++;
             }
             inputs[i] = input.substring(start, end);
+            System.out.println("input[" + i + "]  from "+start+"~"+end);
+        }
+        for (int i = 1; i < numThreads; i++) {
+            inputs[i] = "<body>"+inputs[i];
+        }
+        
+        return inputs;
+    }
+    
+    String[] partitionByLine(String input) {
+        String[] inputs = new String[numThreads];
+        StringTokenizer tokenizer = new StringTokenizer(input, "\n");
+        for (int i = 0; i < numThreads; i++) {
+        	if(tokenizer.hasMoreTokens())
+        		inputs[i] = tokenizer.nextToken();
+        	else {
+        		System.out.println("no enough input lines");
+        		break;
+        	}
         }
         for (int i = 0; i < numThreads; i++)
             System.out.println("input[" + i + "]" + inputs[i]);
-
         return inputs;
     }
 
@@ -81,31 +102,113 @@ public class ParallelParser {
         }
 
         public void run() {
+            input = checkBeginWithEndTags(input);
             int threadID = Integer.parseInt(getName());
             docs[threadID] = Jsoup.parse(input);
         }
     }
+    
+    String checkBeginWithEndTags(String input) {
+    	if(isBeginWithEndTags(input))
+    		return "<dumb></dumb>"+input;
+    	else
+    		return input;
+    }
+    
+    boolean isBeginWithEndTags(String input) {
+    	String pattern = "(?s)(\\s)*</(\\w)*>.*";
+    	if(input.matches(pattern)) {
+    		return true;
+    	}
+    	else {
+    		return false;
+    	}	
+    }
 
     Document postprocess(Document[] docs) {
         for (int i = 1; i < numThreads; i++) {
-            System.out.println("merge docs[" + i + "]");
-            docs[0] = merge(docs[0], docs[i]);
+            merge(docs, i);
         }
         return docs[0];
     }
 
-    // merge doc's body'children to doc0's body
-    Document merge(Document doc0, Document doc) {
+    // merge docs[i]'s body'children to docs[0]'s body
+    void merge(Document[] docs, int index) {
 
-        Element body0 = doc0.body();
-        Element body = doc.body();
-
+        Element body0 = docs[0].body();
         Node rightMost = getRightMost(body0);
-        Node[] children = body.childNodesAsArray();
+        
+        ArrayList<Element> bodys = docs[index].bodys();
+        Node[] children = null;
+        
+        // handle broken comments
+        if(rightMost.nodeType().equals("StartComment")) {
+        	
+        	// if 2 body versions, version 0 is comment interpreting;
+        	// version 1 is normal interpreting, which is useless here
+        	if(bodys.size() == 2) {
+        		children = bodys.get(0).childNodesAsArray();
+        		// remove version 1
+        		bodys.get(0).parent().removeChild(bodys.get(1));
+        		// merge EndComment and StartComment
+        		String comment = ((StartComment)rightMost).getData() + 
+        				         ((EndComment)children[0]).getData();
+        		// remove EndComment from bodys.get(0)
+        		bodys.get(0).removeChild(children[0]);
+        		// replace StartComment with Comment
+        		Node commentNode = new Comment(comment, rightMost.baseUri());
+        		Element parent = (Element)rightMost.parent();
+        		parent.removeChild(rightMost);
+        		parent.appendChild(commentNode);
+        		commentNode.setParent(parent);
+        		rightMost = commentNode;
+        	}
+        	
+        	// the whole inputs[index] should be treated as comment
+        	else if(bodys.size() == 1)  { 
+        		((StartComment)rightMost).setData(((StartComment)rightMost).getData() + 
+        				                          this.inputs[index]);
+        		return;
+        	}
+        	
+        	else
+        		System.out.println("unexpected case in merge.");
+        }
+        children = bodys.get(0).childNodesAsArray();
 
+        // handle broken scripts
+        if(rightMost.nodeType().equals("DataNode")) {
+        	
+        	rightMost = rightMost.parent();
+            if(rightMost.nodeName().equals("script") && ((Element)rightMost).onlyStartTag == true) {
+		        if(children[1].nodeName().equals("script") && ((Element)children[1]).onlyEndTag == true) {
+		        	
+		        	if(rightMost.nodeName().equals("script") == false || ((Element)rightMost).onlyStartTag == false)
+		        		System.out.println("err in merging");
+		        	
+		        	String newData = ((DataNode)rightMost.childNode(0)).getWholeData() + 
+		        			         ((TextNode)children[0]).getWholeText();
+		        	
+		        	((DataNode)rightMost.childNode(0)).setWholeData(newData);
+		        	bodys.get(0).removeChild(children[0]);
+		        } else {
+		        	// the whole inputs[index] is part of a script
+		        	String newData = ((DataNode)rightMost.childNode(0)).getWholeData() +
+		        			         this.inputs[index].substring(6, this.inputs[index].length());
+		        	((DataNode)rightMost.childNode(0)).setWholeData(newData);
+		        	return;
+		        }
+            }
+        }
+        children = bodys.get(0).childNodesAsArray();
+
+        // remove <dumb></dumb> tag if it is there
+        if(children[0].nodeName().equals("dumb")) {
+        	bodys.get(0).removeChild(children[0]);
+        	children = bodys.get(0).childNodesAsArray();
+        }
+        
         Node current = rightMost;
-
-        System.out.println("children.length: " + children.length);
         for (int i = 0; i < children.length; i++) {
             // move to next start tag
             while (true) {
@@ -114,7 +217,7 @@ public class ParallelParser {
                     continue;
                 }
 
-                if (((Element) current) == doc0.body())
+                if (((Element) current) == docs[0].body())
                     break;
 
                 if (((Element) current).onlyStartTag == true)
@@ -127,16 +230,23 @@ public class ParallelParser {
                     && ((Element) children[i]).onlyEndTag == true) {
                 ((Element) current).onlyStartTag = false;
                 continue;
+            } else if(current.nodeName().equals("tbody") && i < children.length -1 &&
+            		  children[i+1].nodeName().equals("table")) {
+            	((Element) current).onlyStartTag = false;
+                continue;
             }
 
             ((Element) current).appendChild(children[i]);
         }
 
-        return doc0;
     }
 
     Node getRightMost(Node root) {
+    	
         Node rightMost = root;
+        if(rightMost.childNodesAsArray().length == 0)
+        	return root;
+        
         do {
             rightMost = rightMost.childNodesAsArray()[rightMost
                     .childNodesAsArray().length - 1];

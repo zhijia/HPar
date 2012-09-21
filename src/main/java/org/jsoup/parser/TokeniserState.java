@@ -23,7 +23,21 @@ enum TokeniserState {
                     break;
                 default:
                     String data = r.consumeToAny('&', '<', nullChar);
-                    t.emit(data);
+                    // zhijia added to emit EndComment tokens for non-first thread
+                    int index = -1;
+                    if(Thread.currentThread().getName().equals("0") == false
+                    	&&  (index = data.indexOf("-->")) != -1) {
+                    	t.createEndCommentPending();
+                    	// consider case "hello-->world"
+                    	int end = r.pos() - (data.length() - index);
+                    	t.endCommentPending.data.append(r.getSegment(6, end));
+                    	t.emitEndCommentPending();
+                    	r.setPos(end+3);
+//                    	if(index < (data.length() - 3))
+//                    		t.emit(data.substring(index+3, data.length()));
+                    }
+                    else
+                    	t.emit(data);
                     break;
             }
         }
@@ -1185,7 +1199,11 @@ enum TokeniserState {
                     break;
                 case eof:
                     t.eofError(this);
-                    t.emitCommentPending();
+                    // zhijia emit StartComment pending
+                    t.createStartCommentPending();
+                    t.startCommentPending.data.append(t.commentPending.data);
+                    t.emitStartCommentPending();
+                    //t.emitCommentPending();
                     t.transition(Data);
                     break;
                 default:

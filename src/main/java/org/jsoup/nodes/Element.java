@@ -1052,15 +1052,17 @@ public class Element extends Node {
         if (accum.length() > 0 && out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock())))
             indent(accum, depth, out);
         accum
-                .append("<");
-        if(this.onlyStartTag == true)
-        	accum.append("'");
-        accum
+                .append("<")
                 .append(tagName());
         attributes.html(accum, out);
         
+        // zhijia added
+        if(this.onlyStartTag == true)
+        	accum.append(" START");
         if(this.onlyEndTag == true)
-        	accum.append("'");
+        	accum.append(" END");
+        if(this.getVersionIndex() != 0)
+        	accum.append(this.getVersionIndex());
 
         if (childNodes.isEmpty() && tag.isSelfClosing())
             accum.append(" />");
@@ -1072,12 +1074,18 @@ public class Element extends Node {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
             if (out.prettyPrint() && !childNodes.isEmpty() && tag.formatAsBlock())
                 indent(accum, depth, out);
-            if(this.onlyEndTag == true)
-            	accum.append("</").append(tagName()).append("'").append(">");
-            else if(this.onlyStartTag == true)
-            	accum.append("</").append("'").append(tagName()).append(">");
-            else
-            	accum.append("</").append(tagName()).append(">");
+            	
+            	accum.append("</").append(tagName());
+                
+                // zhijia added
+            	if(this.onlyStartTag == true)
+                	accum.append(" START");
+                if(this.onlyEndTag == true)
+                	accum.append(" END");
+                if(this.getVersionIndex() != 0)
+                	accum.append(this.getVersionIndex());
+            	
+                accum.append(">");
         }
     }
 

@@ -182,6 +182,42 @@ abstract class Token {
             return "<!--" + getData() + "-->";
         }
     }
+    
+    // zhijia added
+    static class StartComment extends Token {
+        final StringBuilder data = new StringBuilder();
+
+        StartComment() {
+            type = TokenType.StartComment;
+        }
+
+        String getData() {
+            return data.toString();
+        }
+
+        @Override
+        public String toString() {
+            return "<!--" + getData();
+        }
+    }
+    
+    // zhijia added
+    static class EndComment extends Token {
+        final StringBuilder data = new StringBuilder();
+
+        EndComment() {
+            type = TokenType.EndComment;
+        }
+
+        String getData() {
+            return data.toString();
+        }
+
+        @Override
+        public String toString() {
+            return getData() + "-->";
+        }
+    }
 
     static class Character extends Token {
         private final String data;
@@ -256,6 +292,8 @@ abstract class Token {
         StartTag,
         EndTag,
         Comment,
+        StartComment,   // zhijia added
+        EndComment,		// zhijia added
         Character,
         EOF
     }

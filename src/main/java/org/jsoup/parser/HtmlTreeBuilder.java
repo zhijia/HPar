@@ -5,17 +5,14 @@ import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.*;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * HTML Tree Builder; creates a DOM from Tokens.
  */
 class HtmlTreeBuilder extends TreeBuilder {
 
-    private HtmlTreeBuilderState state; // the current state
+	private HtmlTreeBuilderState state; // the current state
     private HtmlTreeBuilderState originalState; // original / marked state
 
     private boolean baseUriSetFromDoc = false;
@@ -28,8 +25,25 @@ class HtmlTreeBuilder extends TreeBuilder {
     private boolean framesetOk = true; // if ok to go into frameset
     private boolean fosterInserts = false; // if next inserts should be fostered
     private boolean fragmentParsing = false; // if parsing a fragment of html
+    
+    // zhijia add to store tag-insertionMode mapping for handling broken <table>
+    private HashMap<String, HtmlTreeBuilderState> stateMap = new HashMap<String, HtmlTreeBuilderState>();
 
-    HtmlTreeBuilder() {}
+    HtmlTreeBuilder() {
+    	init();
+    }
+    
+    // zhijia add to build the tag-insertionMode mapping to predict insertion mode 
+    // when <table> tag is broken
+    void init() {
+    	stateMap.put("td", HtmlTreeBuilderState.InCell);
+    	stateMap.put("tr", HtmlTreeBuilderState.InTableText);
+    	stateMap.put("th", HtmlTreeBuilderState.InCell);
+    	stateMap.put("thead", HtmlTreeBuilderState.InTableText);
+    	stateMap.put("tbody", HtmlTreeBuilderState.InTableText);
+    	stateMap.put("tfoot", HtmlTreeBuilderState.InTableText);
+    	//stateMap.put("table", HtmlTreeBuilderState.InTableText);
+    }
 
     @Override
     Document parse(String input, String baseUri, ParseErrorList errors) {
@@ -88,7 +102,18 @@ class HtmlTreeBuilder extends TreeBuilder {
         currentToken = token;
         return state.process(token, this);
     }
-
+    
+    // zhijia add to reset the parser when <table> tag is broken
+    void reset(String name) {
+    	super.reset();
+    	this.state = stateMap.get(name);
+    }
+    
+    // zhijia add to reset the parser caused by broken script tag
+    void emptyFormattingElements() {
+    	 this.formattingElements = new DescendableLinkedList<Element>();
+    }
+    
     void transition(HtmlTreeBuilderState state) {
         this.state = state;
     }
@@ -156,7 +181,7 @@ class HtmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
-    // zhijia add insert(EndTag) 
+    // zhijia add to insert endTag tokens which are normally ignored
     Element insert(Token.EndTag endTag)
     {
     	Element body = doc.body();
@@ -164,9 +189,6 @@ class HtmlTreeBuilder extends TreeBuilder {
     	Attributes attr = new Attributes();
     	Element el = new Element(Tag.valueOf(endTag.name()), baseUri, attr);
     	el.onlyEndTag = true;
-
-//    	el.addChildren(body.childNodesAsArray());
-//    	body.removeChildNodes();
     	
     	body.appendChild(el);
     		
@@ -201,6 +223,32 @@ class HtmlTreeBuilder extends TreeBuilder {
         insertNode(comment);
     }
 
+    // zhijia add to insert startComment tokens
+    void insert(Token.StartComment startCommentToken) {
+        StartComment startComment = new StartComment(startCommentToken.getData(), baseUri);
+        insertNode(startComment);
+    }
+    
+    // zhijia add to insert endComment tokens
+    void insert(Token.EndComment endCommentToken) {
+        EndComment endComment = new EndComment(endCommentToken.getData(), baseUri);
+        
+        // make html have two body nodes: bodyCopy and body
+        // bodyCopy for normal interpreting, body for endComment interpreting
+        Element body = doc.body();
+        Element bodyCopy = new Element(body.tag(), body.baseUri(), body.attributes());
+        bodyCopy.setVersionIndex(body.getVersionIndex() + 1);
+        Node[] bodyChildren = body.childNodesAsArray();
+        for(int i = 0; i < bodyChildren.length; i++) {
+        	bodyCopy.appendChild(bodyChildren[i]);
+        }
+        bodyCopy.setParent(body.parent());
+        body.parent().addChildren(bodyCopy);
+        body.removeChildNodes();
+        insertNode(endComment);
+    }
+    
+    
     void insert(Token.Character characterToken) {
         Node node;
         // characters in script and style go in as datanodes, not text nodes
@@ -223,10 +271,12 @@ class HtmlTreeBuilder extends TreeBuilder {
 
     Element pop() {
         // todo - dev, remove validation check
-        if (stack.peekLast().nodeName().equals("td") && !state.name().equals("InCell"))
-            Validate.isFalse(true, "pop td not in cell");
-        if (stack.peekLast().nodeName().equals("html"))
-            Validate.isFalse(true, "popping html!");
+    	
+    	//zhijia comment
+        //if (stack.peekLast().nodeName().equals("td") && !state.name().equals("InCell"))
+        //    Validate.isFalse(true, "pop td not in cell");
+        //if (stack.peekLast().nodeName().equals("html"))
+        //    Validate.isFalse(true, "popping html!");
         return stack.pollLast();
     }
 
@@ -315,15 +365,18 @@ class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void clearStackToTableContext() {
-        clearStackToContext("table");
+    	// zhijia add "body" to handle broken table tag
+        clearStackToContext("table", "body");
     }
 
     void clearStackToTableBodyContext() {
-        clearStackToContext("tbody", "tfoot", "thead");
+    	// zhijia add "body" to handle broken table tag
+        clearStackToContext("tbody", "tfoot", "thead", "body");
     }
 
     void clearStackToTableRowContext() {
-        clearStackToContext("tr");
+    	// zhijia add "body" to handle broken table tag
+        clearStackToContext("tr", "body");
     }
 
     private void clearStackToContext(String... nodeNames) {
@@ -576,6 +629,7 @@ class HtmlTreeBuilder extends TreeBuilder {
 
     void reconstructFormattingElements() {
         int size = formattingElements.size();
+
         if (size == 0 || formattingElements.getLast() == null || onStack(formattingElements.getLast()))
             return;
 

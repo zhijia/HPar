@@ -58,6 +58,18 @@ public class Document extends Element {
     public Element body() {
         return findFirstElementByTagName("body", this);
     }
+    
+    // zhijia added
+    public ArrayList<Element> bodys() {
+    	ArrayList<Element> bodys = new ArrayList<Element>();
+    	Element body = findFirstElementByTagName("body", this);
+    	
+    	for(Node node : body.parent().childNodes) {
+    		if(node.nodeName().equals("body"))
+    			bodys.add((Element)node);
+    	}
+    	return bodys;
+    }
 
     /**
      Get the string contents of the document's {@code title} element.

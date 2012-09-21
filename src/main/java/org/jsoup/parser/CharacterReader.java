@@ -14,11 +14,31 @@ class CharacterReader {
     private final int length;
     private int pos = 0;
     private int mark = 0;
+    
+    // zhijia added
+    private String inputString;
 
     CharacterReader(String input) {
         Validate.notNull(input);
         this.input = input.toCharArray();
         this.length = this.input.length;
+        // zhijia added
+        this.inputString = input;
+    }
+    
+    // zhijia added
+    String getSegment(int start, int end) {
+    	return inputString.substring(start, end);
+    }
+    
+    // zhijia added
+    void setPos(int pos) {
+    	this.pos = pos;
+    }
+    
+    // zhijia added
+    String subString(int start, int end) {
+    	return inputString.substring(start, end);
     }
 
     int pos() {
