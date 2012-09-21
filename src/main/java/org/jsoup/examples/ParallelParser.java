@@ -26,7 +26,7 @@ public class ParallelParser {
 
         Thread[] pparsers = new ParserThread[numThreads];
 
-        long sta = System.currentTimeMillis();
+        long sta = System.nanoTime();
         for (int i = 0; i < numThreads; i++) {
             pparsers[i] = new ParserThread(i + "", inputs[i]);
             pparsers[i].start();
@@ -39,9 +39,9 @@ public class ParallelParser {
                 e.printStackTrace();
             }
         }
-        long mid = System.currentTimeMillis();
+        long mid = System.nanoTime();
         Document doc = postprocess(docs);
-        long end = System.currentTimeMillis();
+        long end = System.nanoTime();
 
         System.out.println("thread parsing time: " + (mid - sta));
         System.out.println("postprocessing time: " + (end - mid));
@@ -93,6 +93,7 @@ public class ParallelParser {
         return inputs;
     }
 
+    // parser worker thread
     class ParserThread extends Thread {
         String input;
 
@@ -102,29 +103,12 @@ public class ParallelParser {
         }
 
         public void run() {
-            input = checkBeginWithEndTags(input);
             int threadID = Integer.parseInt(getName());
             docs[threadID] = Jsoup.parse(input);
         }
     }
-    
-    String checkBeginWithEndTags(String input) {
-    	if(isBeginWithEndTags(input))
-    		return "<dumb></dumb>"+input;
-    	else
-    		return input;
-    }
-    
-    boolean isBeginWithEndTags(String input) {
-    	String pattern = "(?s)(\\s)*</(\\w)*>.*";
-    	if(input.matches(pattern)) {
-    		return true;
-    	}
-    	else {
-    		return false;
-    	}	
-    }
 
+    // merge trees to form single DOM tree
     Document postprocess(Document[] docs) {
         for (int i = 1; i < numThreads; i++) {
             merge(docs, i);
@@ -201,13 +185,8 @@ public class ParallelParser {
             }
         }
         children = bodys.get(0).childNodesAsArray();
-
-        // remove <dumb></dumb> tag if it is there
-        if(children[0].nodeName().equals("dumb")) {
-        	bodys.get(0).removeChild(children[0]);
-        	children = bodys.get(0).childNodesAsArray();
-        }
         
+        // merge two trees
         Node current = rightMost;
         for (int i = 0; i < children.length; i++) {
             // move to next start tag

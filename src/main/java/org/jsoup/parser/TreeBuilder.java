@@ -65,8 +65,8 @@ abstract class TreeBuilder {
     protected void runParser() {
         while (true) {   	
             Token token = tokeniser.read();
-            if(Thread.currentThread().getName().equals("1"))
-            	System.out.println("type: "+token.tokenType()+" token: "+token);
+			// if(Thread.currentThread().getName().equals("1"))
+			// System.out.println("type: "+token.tokenType()+" token: "+token);
             process(token);
             
             if (token.type == Token.TokenType.EOF)

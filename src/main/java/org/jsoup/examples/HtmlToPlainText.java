@@ -43,7 +43,7 @@ public class HtmlToPlainText {
         Document doc = null;
         int cnt = 0;
         long sum = 0;
-        while(cnt++ < 500) {
+        while(cnt++ < 1) {
 	        long start = System.nanoTime();
 	        // parameters: line, number of threads
 	        ParallelParser pparser = new ParallelParser(line, 4);
@@ -52,10 +52,10 @@ public class HtmlToPlainText {
         	if(cnt > 100) {
         		sum += end - start;
         	}
-	        System.out.println("time: "+ (end - start) + " ms");
+	        System.out.println("time: "+ (end - start) + " ns");
 	        System.gc();
         }
-        System.out.println("ave: "+ (sum / 400) + " ms");
+        System.out.println("ave: "+ (sum / 400) + " ns");
 
 		FileWriter file = new FileWriter("doc.html");
 		PrintWriter out = new PrintWriter(file);
