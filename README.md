@@ -3,7 +3,7 @@
 HTML paser Jsoup. With speculative parallelization, HPar can even parse a single
 HTML file in parallel.
 
-<img src="img/speedup-macbook.png"/>
+<img src="img/speedup-macbook.png" width="500"/>
 
 <center>Fig. Speedup on MacBook Pro with a Quad-Core CPU</center>
 
@@ -11,6 +11,10 @@ HTML file in parallel.
 
     ParallelParser pparser = new ParallelParser(html, numThreads);
     doc = pparser.parse();
+
+Note that the current prototype passed the included test sets (up to 8 threads),
+but it does not guarantee the resulted DOM tree always the same as that from a
+sequential version. 
 
 Reference:
 
