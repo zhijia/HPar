@@ -26,7 +26,7 @@ public class ParallelParser {
 
         Thread[] pparsers = new ParserThread[numThreads];
 
-        long sta = System.nanoTime();
+       // long sta = System.currentTimeMillis();
         for (int i = 0; i < numThreads; i++) {
             pparsers[i] = new ParserThread(i + "", inputs[i]);
             pparsers[i].start();
@@ -39,12 +39,12 @@ public class ParallelParser {
                 e.printStackTrace();
             }
         }
-        long mid = System.nanoTime();
+       // long mid = System.currentTimeMillis();
         Document doc = postprocess(docs);
-        long end = System.nanoTime();
+       // long end = System.currentTimeMillis();
 
-        System.out.println("thread parsing time: " + (mid - sta));
-        System.out.println("postprocessing time: " + (end - mid));
+       // System.out.println("thread parsing time: " + (mid - sta) + " ms");
+       // System.out.println("postprocessing time: " + (end - mid) + " ms");
         
         return doc;
     }
@@ -70,7 +70,7 @@ public class ParallelParser {
             inputs[i] = input.substring(start, end);   // from start to end-1
             //System.out.println("input[" + i + "]  from " + start + "~" + end);
         }
-        System.out.println("");
+        //System.out.println("");
         
         for (int i = 1; i < numThreads; i++) {
             inputs[i] = "<body>" + inputs[i];
@@ -115,8 +115,8 @@ public class ParallelParser {
         for (int i = 1; i < numThreads; i++) {
             merge(docs, i);
         }
-        System.out.println("failed: "+failedCnt+" total: "+totalCnt);
-        System.out.println("speculation accuracy: "+(1-((double)failedCnt/totalCnt)));
+       // System.out.println("failed: "+failedCnt+" total: "+totalCnt);
+       // System.out.println("speculation accuracy: "+(1-((double)failedCnt/totalCnt)));
         return docs[0];
     }
     /* measure speculation accuracy */

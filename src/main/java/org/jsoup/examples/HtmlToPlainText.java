@@ -45,13 +45,13 @@ public class HtmlToPlainText {
         
         /* measure time */
         Document doc = null;
-        final int WARMUP = 0;
+        final int WARMUP = 20;
         int warmup = WARMUP;
         while(warmup-- > 0) {
             ParallelParser pparser = new ParallelParser(html, numThreads);
             doc = pparser.parse();
         }
-        final int RUNS = 1;
+        final int RUNS = 20;
         int runs = RUNS;
         float total = 0;
         while(runs-- > 0) {
@@ -59,10 +59,9 @@ public class HtmlToPlainText {
             long start = System.currentTimeMillis();
             doc = pparser.parse();
             long duration = System.currentTimeMillis() - start;
-            System.out.println("total: " + duration);
             total += duration;
         }
-        System.out.println("total: " + total/RUNS);
+        System.out.println("total: " + total/RUNS + " ms");
 
         FileWriter file = new FileWriter("test/doc.html");
         PrintWriter out = new PrintWriter(file);
