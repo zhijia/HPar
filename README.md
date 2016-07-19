@@ -1,5 +1,10 @@
-# jsoupp
-**jsoupp** is a prototype of a data parallel HTML5 parser. It parses a single HTML file in parallel.
+# HPar
+**HPar** is a prototype of a data parallel HTML5 parser. It is based on popular
+HTML paser Jsoup. With speculative parallelization, HPar can even parse a single
+HTML file in parallel.
+
+Speedup on MacBook Pro with a Quad-Core CPU:
+<img src="img/speedup-macbook.png" width="200"/>
 
 ### How To Use:
 
