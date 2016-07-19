@@ -3,8 +3,9 @@
 HTML paser Jsoup. With speculative parallelization, HPar can even parse a single
 HTML file in parallel.
 
-Speedup on MacBook Pro with a Quad-Core CPU:
-<img src="img/speedup-macbook.png" width="200"/>
+<img src="img/speedup-macbook.png"/>
+
+<center>Fig. Speedup on MacBook Pro with a Quad-Core CPU</center>
 
 ### How To Use:
 
