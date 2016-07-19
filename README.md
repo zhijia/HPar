@@ -1,7 +1,7 @@
 # HPar
-**HPar** is a prototype of a data parallel HTML5 parser. It is based on popular
-HTML paser Jsoup. With speculative parallelization, HPar can even parse a single
-HTML file in parallel.
+**HPar** is a prototype of a data parallel HTML5 parser. It is based on the
+popular HTML paser <a href="https://jsoup.org/">Jsoup</a>. With speculative
+parallelization, HPar can even parse a single HTML file in parallel.
 
 <img src="img/speedup-macbook.png" width="500"/>
 
