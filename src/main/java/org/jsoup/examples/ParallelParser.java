@@ -45,7 +45,7 @@ public class ParallelParser {
 
         System.out.println("thread parsing time: " + (mid - sta));
         System.out.println("postprocessing time: " + (end - mid));
-
+        
         return doc;
     }
 
@@ -67,9 +67,11 @@ public class ParallelParser {
                 }
                 end++;
             }
-            inputs[i] = input.substring(start, end);
-            System.out.println("input[" + i + "]  from " + start + "~" + end);
+            inputs[i] = input.substring(start, end);   // from start to end-1
+            //System.out.println("input[" + i + "]  from " + start + "~" + end);
         }
+        System.out.println("");
+        
         for (int i = 1; i < numThreads; i++) {
             inputs[i] = "<body>" + inputs[i];
         }
@@ -113,12 +115,18 @@ public class ParallelParser {
         for (int i = 1; i < numThreads; i++) {
             merge(docs, i);
         }
+        System.out.println("failed: "+failedCnt+" total: "+totalCnt);
+        System.out.println("speculation accuracy: "+(1-((double)failedCnt/totalCnt)));
         return docs[0];
     }
-
+    /* measure speculation accuracy */
+    static int failedCnt = 0;
+    static int totalCnt = 0;
     // merge docs[i]'s body'children to docs[0]'s body
     void merge(Document[] docs, int index) {
 
+        totalCnt++;
+        
         Element body0 = docs[0].body();
         Node rightMost = getRightMost(body0);
 
@@ -127,7 +135,7 @@ public class ParallelParser {
 
         // handle broken comments
         if (rightMost.nodeType().equals("StartComment")) {
-
+            failedCnt++;
             // if 2 body versions, version 0 is comment interpreting;
             // version 1 is normal interpreting, which is useless here
             if (bodys.size() == 2) {
@@ -162,7 +170,7 @@ public class ParallelParser {
 
         // handle broken scripts
         if (rightMost.nodeType().equals("DataNode")) {
-
+            failedCnt++;
             rightMost = rightMost.parent();
             if (rightMost.nodeName().equals("script") && ((Element) rightMost).onlyStartTag == true) {
                 if (children[1].nodeName().equals("script")

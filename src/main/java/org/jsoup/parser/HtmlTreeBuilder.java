@@ -43,6 +43,7 @@ class HtmlTreeBuilder extends TreeBuilder {
         stateMap.put("tbody", HtmlTreeBuilderState.InTableText);
         stateMap.put("tfoot", HtmlTreeBuilderState.InTableText);
         // stateMap.put("table", HtmlTreeBuilderState.InTableText);
+        
     }
 
     @Override

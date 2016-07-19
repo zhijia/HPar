@@ -28,7 +28,7 @@ abstract class TreeBuilder {
         Validate.notNull(baseUri, "BaseURI must not be null");
 
         doc = new Document(baseUri);
-        reader = new CharacterReader(input);
+        reader = new CharacterReader(input, this);
         this.errors = errors;
         tokeniser = new Tokeniser(reader, errors);
         stack = new DescendableLinkedList<Element>();
@@ -39,7 +39,7 @@ abstract class TreeBuilder {
     
     void reset() {
     	doc.body().removeChildNodes();
-    	reader = new CharacterReader(input);
+    	reader = new CharacterReader(input, this);
     	this.errors = ParseErrorList.tracking(100);
     	tokeniser = new Tokeniser(reader, errors);
     	while(stack.size() > 2)
@@ -73,6 +73,7 @@ abstract class TreeBuilder {
                 break;
         }
         updateDoc();
+        //System.out.println(tokeniser.getReader().getProfileData());
     }
     
     // update doc tree according to open stack emlement

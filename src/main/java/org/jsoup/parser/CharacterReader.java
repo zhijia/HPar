@@ -17,13 +17,32 @@ class CharacterReader {
     
     // zhijia added
     private String inputString;
+    int dataCnt;
+    int angleCnt;
+    int dataAngleCnt;
+    int totalCnt;
+    StringBuilder profile;
+    TreeBuilder tb;
 
-    CharacterReader(String input) {
+    CharacterReader(String input, TreeBuilder tb) {
         Validate.notNull(input);
         this.input = input.toCharArray();
         this.length = this.input.length;
         // zhijia added
         this.inputString = input;
+        this.tb = tb;
+        dataCnt = 0;
+        angleCnt = 0;
+        dataAngleCnt = 0;
+        profile = new StringBuilder();
+    }
+    
+    // zhijia added
+    String getProfileData() {
+        profile.append("dataCnt: " + dataCnt +
+                " angleCnt: " + angleCnt +
+                " dataAngleCnt: " + dataAngleCnt);
+        return profile.toString();
     }
     
     // zhijia added
@@ -39,6 +58,37 @@ class CharacterReader {
     // zhijia added
     String subString(int start, int end) {
     	return inputString.substring(start, end);
+    }
+    
+    // zhijia added
+    int getLength() {
+        return length;
+    }
+    
+    // zhijia added
+    char getChar(int pos) {
+        if(pos < input.length && pos >= 0)
+            return input[pos];
+        else
+            return EOF;
+    }
+    
+    // zhijia added
+    void profile() {
+        if(tb.tokeniser.getState().name().equals("Data"))
+            dataCnt++;
+        if(getChar(pos-1)=='<' && tb.tokeniser.getState().name().equals("Data"))
+            dataAngleCnt++;
+        if(getChar(pos-1)=='<') {
+            angleCnt++;
+            //System.out.println(getChar(pos) + " : "+tb.tokeniser.getState().name());
+        }
+        pos--;
+        if(pos==0 ||pos==49861 ||pos==83644 ||pos==117508 ||pos==151254 ||
+                pos==185205 ||pos==218946 ||pos==258212 ||pos==302124 ||pos==336254) {
+            //profile.append(pos + ":" + tb.state() + "\n");
+        }
+        pos++;
     }
 
     int pos() {
@@ -56,6 +106,7 @@ class CharacterReader {
     char consume() {
         char val = isEmpty() ? EOF : input[pos];
         pos++;
+        //profile();  //zhijia added
         return val;
     }
 
@@ -65,6 +116,7 @@ class CharacterReader {
 
     void advance() {
         pos++;
+        //profile();  //zhijia added
     }
 
     void mark() {
@@ -148,6 +200,7 @@ class CharacterReader {
                     break OUTER;
             }
             pos++;
+            //profile();  //zhijia added
         }
 
         return pos > start ? new String(input, start, pos-start) : "";
@@ -163,8 +216,10 @@ class CharacterReader {
         int start = pos;
         while (pos < length) {
             char c = input[pos];
-            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
                 pos++;
+                //profile();  //zhijia added
+            }
             else
                 break;
         }
@@ -176,15 +231,19 @@ class CharacterReader {
         int start = pos;
         while (pos < length) {
             char c = input[pos];
-            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
                 pos++;
+                //profile();  //zhijia added
+            }
             else
                 break;
         }
         while (!isEmpty()) {
             char c = input[pos];
-            if (c >= '0' && c <= '9')
+            if (c >= '0' && c <= '9') {
                 pos++;
+                //profile();  //zhijia added
+            }
             else
                 break;
         }
@@ -196,8 +255,10 @@ class CharacterReader {
         int start = pos;
         while (pos < length) {
             char c = input[pos];
-            if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
+            if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
                 pos++;
+                //profile();  //zhijia added
+            }
             else
                 break;
         }
@@ -208,8 +269,10 @@ class CharacterReader {
         int start = pos;
         while (pos < length) {
             char c = input[pos];
-            if (c >= '0' && c <= '9')
+            if (c >= '0' && c <= '9') {
                 pos++;
+                //profile();  //zhijia added
+            }
             else
                 break;
         }

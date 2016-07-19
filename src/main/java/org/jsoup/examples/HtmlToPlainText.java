@@ -26,44 +26,48 @@ import java.util.*;
 public class HtmlToPlainText {
 
     public static void main(String... args) throws IOException {
-        Validate.isTrue(args.length == 1, "usage: supply url to fetch");
-        String inputFile = args[0];
-        // HtmlToPlainText formmatter = new HtmlToPlainText();
+        Validate.isTrue(args.length == 2, "usage: html numThreads");
+        int numThreads = Integer.parseInt(args[1]);
 
-        String line = "";
-        try {
-            Scanner scanner = new Scanner(new FileInputStream(inputFile));
-            scanner.useDelimiter("//Z");
-            line = scanner.next();
-            System.out.println("finished input html loading.");
-        } catch (FileNotFoundException e) {
+        String html = "";
+        
+        BufferedReader in = null;
+        try{
+            in = new BufferedReader(new FileReader(args[0]));
+            String line = "";
+            while((line = in.readLine()) != null)
+            	html += line;
+        }catch(IOException e){
             e.printStackTrace();
+        }finally{
+                in.close();
         }
-
+        
+        /* measure time */
         Document doc = null;
-        int cnt = 0;
-        long sum = 0;
-        while (cnt++ < 1) {
-            long start = System.nanoTime();
-            // parameters: line, number of threads
-            ParallelParser pparser = new ParallelParser(line, 4);
+        final int WARMUP = 0;
+        int warmup = WARMUP;
+        while(warmup-- > 0) {
+            ParallelParser pparser = new ParallelParser(html, numThreads);
             doc = pparser.parse();
-            long end = System.nanoTime();
-            if (cnt > 100) {
-                sum += end - start;
-            }
-            System.out.println("time: " + (end - start) + " ns");
-            System.gc();
         }
-        System.out.println("ave: " + (sum / 400) + " ns");
+        final int RUNS = 1;
+        int runs = RUNS;
+        float total = 0;
+        while(runs-- > 0) {
+            ParallelParser pparser = new ParallelParser(html, numThreads);
+            long start = System.currentTimeMillis();
+            doc = pparser.parse();
+            long duration = System.currentTimeMillis() - start;
+            System.out.println("total: " + duration);
+            total += duration;
+        }
+        System.out.println("total: " + total/RUNS);
 
-        FileWriter file = new FileWriter("doc.html");
+        FileWriter file = new FileWriter("test/doc.html");
         PrintWriter out = new PrintWriter(file);
         out.println(doc);
         out.close();
-
-        // String plainText = formmatter.getPlainText(doc);
-        // System.out.println("--------\n"+plainText+"\n--------");
     }
 
     /**

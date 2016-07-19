@@ -773,6 +773,7 @@ enum HtmlTreeBuilderState {
                     // zhijia add to handle broken <table> tag, to reprocess the segment with appropriate insertion mode
                     } else if (StringUtil.in(name, "tr", "td", "th", "thead", "tbody", "tfoot")){
                     	tb.reset(name);
+                    	System.out.println("tree builder met table-realted EndTags in InBody mode, reset parser states");
                     	return false;
                     	
                     // zhijia add to handle broken <script> tag
@@ -792,7 +793,8 @@ enum HtmlTreeBuilderState {
                         
                     	body.appendChild(tn);
                     	body.appendChild(el);
-
+                    	
+                        System.out.println("tree builder met </script> in InBody mode, adjust DOM tree accordingly");
                     	return true;
                     } else {
                         return anyOtherEndTag(t, tb);

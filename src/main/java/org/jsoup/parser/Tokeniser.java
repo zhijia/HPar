@@ -25,13 +25,13 @@ class Tokeniser {
     Token.EndComment endCommentPending;  // zhijia added
     private Token.StartTag lastStartTag; // the last start tag emitted, to test appropriate end tag
     private boolean selfClosingFlagAcknowledged = true;
-
+    
     Tokeniser(CharacterReader reader, ParseErrorList errors) {
         this.reader = reader;
         this.errors = errors;
     }
 
-    Token read() {
+    Token read() {        
         if (!selfClosingFlagAcknowledged) {
             error("Self closing flag not acknowledged");
             selfClosingFlagAcknowledged = true;
@@ -50,6 +50,11 @@ class Tokeniser {
             return emitPending;
         }
     }
+    
+    // zhijia added to get the reader
+    CharacterReader getReader() {
+        return reader;
+    }
 
 //    // zhijia add to reset the tokenizer
 //    void reset() {
@@ -66,6 +71,7 @@ class Tokeniser {
 //    	charBuffer.delete(0, charBuffer.length());
 //    	isEmitPending = false;
 //    }
+    
     
     void emit(Token token) {
         Validate.isFalse(isEmitPending, "There is an unread token pending!");
