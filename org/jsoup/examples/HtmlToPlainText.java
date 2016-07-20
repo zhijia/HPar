@@ -30,18 +30,26 @@ public class HtmlToPlainText {
         int numThreads = Integer.parseInt(args[1]);
 
         String html = "";
+        StringBuilder sb = new StringBuilder();
         
+        long start, duration; /* time profiling variables */
+        
+        start = System.currentTimeMillis();
         BufferedReader in = null;
         try{
             in = new BufferedReader(new FileReader(args[0]));
             String line = "";
             while((line = in.readLine()) != null)
-            	html += line;
+            	 sb.append(line);
         }catch(IOException e){
             e.printStackTrace();
         }finally{
                 in.close();
         }
+        html = sb.toString();
+        duration = System.currentTimeMillis() - start;
+        //System.out.println("loading html: " + duration + " ms");
+
         
         /* measure time */
         Document doc = null;
@@ -56,15 +64,14 @@ public class HtmlToPlainText {
         float total = 0;
         while(runs-- > 0) {
             ParallelParser pparser = new ParallelParser(html, numThreads);
-            long start = System.currentTimeMillis();
+            start = System.currentTimeMillis();
             doc = pparser.parse();
-            long duration = System.currentTimeMillis() - start;
+            duration = System.currentTimeMillis() - start;
             total += duration;
         }
         System.out.println("total: " + total/RUNS + " ms");
 
-        FileWriter file = new FileWriter("test/output.html");
-        PrintWriter out = new PrintWriter(file);
+        PrintWriter out = new PrintWriter("test/output.html");
         out.println(doc);
         out.close();
     }

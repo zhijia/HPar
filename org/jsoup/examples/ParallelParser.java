@@ -12,13 +12,13 @@ public class ParallelParser {
     String input;
     Document[] docs;
     String[] inputs;
-    DescendableLinkedList<Element> stack; // open emlement stack
+    DescendableLinkedList<Element> stack; // open element stack
 
     ParallelParser(String input, int numThreads) {
         this.input = input;
         this.numThreads = numThreads;
         inputs = partition(input);
-        // inputs = partitionByLine(input);
+        //inputs = partitionByLine(input);
         docs = new Document[numThreads];
     }
 
@@ -26,7 +26,7 @@ public class ParallelParser {
 
         Thread[] pparsers = new ParserThread[numThreads];
 
-       // long sta = System.currentTimeMillis();
+        //long sta = System.currentTimeMillis();
         for (int i = 0; i < numThreads; i++) {
             pparsers[i] = new ParserThread(i + "", inputs[i]);
             pparsers[i].start();
@@ -39,12 +39,12 @@ public class ParallelParser {
                 e.printStackTrace();
             }
         }
-       // long mid = System.currentTimeMillis();
+        //long mid = System.currentTimeMillis();
         Document doc = postprocess(docs);
-       // long end = System.currentTimeMillis();
+        //long end = System.currentTimeMillis();
 
-       // System.out.println("thread parsing time: " + (mid - sta) + " ms");
-       // System.out.println("postprocessing time: " + (end - mid) + " ms");
+        //System.out.println("thread parsing time: " + (mid - sta) + " ms");
+        //System.out.println("postprocessing time: " + (end - mid) + " ms");
         
         return doc;
     }
@@ -115,8 +115,8 @@ public class ParallelParser {
         for (int i = 1; i < numThreads; i++) {
             merge(docs, i);
         }
-       // System.out.println("failed: "+failedCnt+" total: "+totalCnt);
-       // System.out.println("speculation accuracy: "+(1-((double)failedCnt/totalCnt)));
+        //System.out.println("failed: "+failedCnt+" total: "+totalCnt);
+        //System.out.println("speculation accuracy: "+(1-((double)failedCnt/totalCnt)));
         return docs[0];
     }
     /* measure speculation accuracy */
@@ -195,9 +195,12 @@ public class ParallelParser {
             }
         }
         children = bodys.get(0).childNodesAsArray();
+        //System.out.println("children["+index+"] length" + children.length);
 
         // merge two trees
         Node current = rightMost;
+        Element body = docs[0].body();
+        
         for (int i = 0; i < children.length; i++) {
             // move to next start tag
             while (true) {
@@ -206,7 +209,7 @@ public class ParallelParser {
                     continue;
                 }
 
-                if (((Element) current) == docs[0].body())
+                if (((Element) current) == body)
                     break;
 
                 if (((Element) current).onlyStartTag == true)

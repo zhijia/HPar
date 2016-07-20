@@ -1,1 +1,1 @@
-java org.jsoup.examples.HtmlToPlainText test/basic.html 4
+java org.jsoup.examples.HtmlToPlainText test/benchmarks/twitter.html 8
