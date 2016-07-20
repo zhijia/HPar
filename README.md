@@ -21,13 +21,19 @@ parallelization, HPar can even parse a single HTML file in parallel.
 included test set (up to 8 threads), the current version does not guarantee
 the resulted DOM tree is always the same as that from a sequential version. 
 
+
+### Publication:
+
+Paper:
+
+<a href="http://www.cs.ucr.edu/~zhijia/papers/taco13.pdf">HPar: A practical
+parallel parser for HTML--taming HTML complexities for parallel parsing</a>
+
 Reference:
 
-    Zhao, Z., Bebenita, M., Herman, D., Sun, J., & Shen, X. (2013). 
-    HPar: A practical parallel parser for HTML--taming HTML complexities for parallel parsing. 
-    ACM Transactions on Architecture and Code Optimization (TACO), 10(4), 44.
-
-BibTex:
+	Zhao, Z., Bebenita, M., Herman, D., Sun, J., & Shen, X. (2013). HPar: A practical parallel parser 
+	for HTML--taming HTML complexities for parallel parsing. ACM Transactions on Architecture and Code 
+	Optimization (TACO), 10(4), 44.
 
     @article{zhao2013hpar,
       title={HPar: A practical parallel parser for HTML--taming HTML complexities for parallel parsing},
