@@ -17,9 +17,10 @@ parallelization, HPar can even parse a single HTML file in parallel.
     ParallelParser pparser = new ParallelParser(html, numThreads);
     doc = pparser.parse();
 
-**Note:** The prototype is mainly for research purpose. Though it passed the
+**Note:** The prototype is still under development. Though it passed the
 included test set (up to 8 threads), the current version does not guarantee
 the resulted DOM tree is always the same as that from a sequential version. 
+**You are welcome to contribute to this project to make it more solid.**
 
 
 ### Publication:
