@@ -10,7 +10,7 @@ parallelization, HPar can even parse a single HTML file in parallel.
 ### Getting Started:
 
     ./compile.sh
-	./run.sh  /* output is /test/output.html */
+	./run.sh      # output is /test/output.html
 
 ### How To Use:
 
