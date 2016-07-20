@@ -7,6 +7,11 @@ parallelization, HPar can even parse a single HTML file in parallel.
 
 <center>Fig. Speedup on MacBook Pro with a Quad-Core CPU</center>
 
+### Getting Started:
+
+    ./compile.sh
+	./run.sh  /* output is /test/output.html */
+
 ### How To Use:
 
     ParallelParser pparser = new ParallelParser(html, numThreads);
